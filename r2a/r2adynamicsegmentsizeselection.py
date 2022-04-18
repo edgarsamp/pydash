@@ -62,8 +62,7 @@ class R2Adynamicsegmentsizeselection(IR2A):
       # o = teta, vontade de aumentar o SS
       o = p*min(19, min(19, ultimo_ss_index+1))
 
-
-      ultimo_ss_index = self.qi.index(self.selected_qi[-1])
+      # Calcula o novo SS
       novo_ss_index = round(ultimo_ss_index - t + o)
 
       # checa se esta se o indice passa dos limites do vetor de qualidades
