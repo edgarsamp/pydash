@@ -53,17 +53,14 @@ class R2Adynamicsegmentsizeselection(IR2A):
       # P é a probabilidade de mudar de qualidade, quanto mais perto de 1 mais estavel é a coneçao
       p = media_throughputs / (media_throughputs + peso)
 
-      ss = 0 
-      for i, qi in enumerate(self.qi):
-          if qi == self.selected_qi[-1]:
-              ss = i
-              break
+
+      ultimo_ss_index = self.qi.index(self.selected_qi[-1])
 
       # t = tau, vontade de diminuir o SS
-      t = (1 - p)*(max(0, max(0, ss-1)))
+      t = (1 - p)*(max(0, max(0, ultimo_ss_index-1)))
 
       # o = teta, vontade de aumentar o SS
-      o = p*min(19, min(19, ss+1))
+      o = p*min(19, min(19, ultimo_ss_index+1))
 
 
       ultimo_ss_index = self.qi.index(self.selected_qi[-1])
@@ -86,7 +83,6 @@ class R2Adynamicsegmentsizeselection(IR2A):
       print('ultimas_qualidades', self.ultimas_qualidades[-1*self.m:])
       print('tam_throughputs', len(self.throughputs))
       print("-"*40)
-
 
 
       # Passa a nova qualidade
