@@ -16,7 +16,7 @@ class R2Adynamicsegmentsizeselection(IR2A):
       self.request_time = 0     # 
       self.qi = []              # Qualidades
       self.selected_qi = []
-      self.a = [-1]
+      self.ultimas_qualidades = []
       self.m = 10
       
 
@@ -46,14 +46,14 @@ class R2Adynamicsegmentsizeselection(IR2A):
 
       media_throughputs = mean(self.throughputs)
 
-      peso = 0
+      peso = 0 # σ²
       for i, throughput in enumerate(self.throughputs):
         peso += (i + 1) * abs(throughput - media_throughputs) / len(self.throughputs)
 
       # P é a probabilidade de mudar de qualidade, quanto mais perto de 1 mais estavel é a coneçao
       p = media_throughputs / (media_throughputs + peso)
 
-      ss = 0 # last qi index
+      ss = 0 
       for i, qi in enumerate(self.qi):
           if qi == self.selected_qi[-1]:
               ss = i
@@ -66,52 +66,44 @@ class R2Adynamicsegmentsizeselection(IR2A):
       o = p*min(19, min(19, ss+1))
 
 
+      ultimo_ss_index = self.qi.index(self.selected_qi[-1])
+      novo_ss_index = round(ultimo_ss_index - t + o)
 
-      #next_qi_index = temp_qualitys.index(min(temp_qualitys)) # mudar nome
+      # checa se esta se o indice passa dos limites do vetor de qualidades
+      novo_ss_index = max(0, novo_ss_index)
+      novo_ss_index = min(19, novo_ss_index)
 
-      next_qi_index = round(self.qi.index(self.selected_qi[-1]) - t + o)
-
-      # checa se esta passando dos limites de qualidades
-      next_qi_index = max(0, next_qi_index)
-      next_qi_index = min(19, next_qi_index)
       # Adiciona a qualidade escolhida no historico
-      self.selected_qi.append(self.qi[next_qi_index])
-      self.a.append(next_qi_index)
+      self.selected_qi.append(self.qi[novo_ss_index])
+      self.ultimas_qualidades.append(novo_ss_index)
       
-
-
 
       print("-"*40)
       print('p', p)
       print('tau', t)
       print('teta', o)
       print('qi', self.qi)
-      print('a', self.a[-1*self.m:])
+      print('ultimas_qualidades', self.ultimas_qualidades[-1*self.m:])
       print('tam_throughputs', len(self.throughputs))
       print("-"*40)
 
 
-      # Passa o indice da qualidade
+
+      # Passa a nova qualidade
       msg.add_quality_id(self.selected_qi[-1])
 
       self.send_down(msg)
-
 
     def handle_segment_size_response(self, msg):
       # Calcula o novo throughput
       rtt = time.perf_counter() - self.request_time
       self.throughputs.append(msg.get_bit_length() / (rtt/float(2)))
 
-      # So guarda os ultimos 10 throughputs
+      # So guarda os ultimos M throughputs
       if(len(self.throughputs) > self.m):
         self.throughputs.pop(0)
 
       self.send_up(msg)
-
-
-
-
-
 
     def initialize(self):
       pass
